@@ -1,0 +1,17 @@
+app_root: .
+binary_name: cmd
+build_delay: 200ms
+build_flags: []
+build_path: /tmp/
+build_target_path: ''
+command_flags: ['run']
+enable_colors: true
+ignored_folders:
+  - vendor
+  - log
+  - logs
+  - tmp
+  - bin
+included_extensions:
+  - .go
+log_name: ''
