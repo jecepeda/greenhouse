@@ -1,7 +1,7 @@
 package crypt
 
 import (
-	"github.com/pkg/errors"
+	"github.com/jecepeda/greenhouse/server/gerror"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,7 +15,7 @@ func (b BEncrypter) EncryptPassword(s string) ([]byte, error) {
 	saltedBytes := []byte(s)
 	hashedBytes, err := bcrypt.GenerateFromPassword(saltedBytes, bcrypt.DefaultCost)
 	if err != nil {
-		return []byte{}, errors.Wrap(err, "encrypt password")
+		return []byte{}, gerror.Wrap(err, "encrypt password")
 	}
 	return hashedBytes, nil
 }

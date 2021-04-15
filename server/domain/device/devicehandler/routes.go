@@ -10,7 +10,7 @@ func GetRoutes(dc handler.DependencyContainer) router.Router {
 		{
 			Path:        "/v1/device/login",
 			Method:      "GET",
-			HandlerFunc: login(dc),
+			HandlerFunc: Login(dc),
 		},
 	}
 	return router.NewRouterFromEndpoints(endpoints)

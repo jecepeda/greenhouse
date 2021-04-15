@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jecepeda/greenhouse/server/domain/device"
+	"github.com/jecepeda/greenhouse/server/gerror"
 	"github.com/jecepeda/greenhouse/server/gsql"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -21,7 +22,7 @@ func (r *Repository) FindAll(ctx context.Context, db gsql.Common) ([]device.Devi
 	)
 	err := sqlx.SelectContext(ctx, db, &devices, query)
 	if err != nil {
-		return nil, errors.Wrap(err, errMsg)
+		return nil, gerror.Wrap(err, errMsg)
 	}
 
 	return devices, nil
@@ -36,9 +37,9 @@ func (r *Repository) FindByID(ctx context.Context, deviceID uint64, db gsql.Comm
 
 	err := db.QueryRowxContext(ctx, query, deviceID).StructScan(&d)
 	if errors.Is(err, sql.ErrNoRows) {
-		return device.Device{}, errors.Wrap(device.ErrNotFound, errMsg)
+		return device.Device{}, gerror.Wrap(device.ErrNotFound, errMsg)
 	} else if err != nil {
-		return device.Device{}, errors.Wrap(err, errMsg)
+		return device.Device{}, gerror.Wrap(err, errMsg)
 	}
 
 	return d, nil
@@ -60,13 +61,13 @@ func (r *Repository) StoreDevice(ctx context.Context, tx *sqlx.Tx, name string, 
 	var deviceID uint64
 	rows, err := sqlx.NamedQueryContext(ctx, tx, query, created)
 	if err != nil {
-		return device.Device{}, errors.Wrap(err, errMsg)
+		return device.Device{}, gerror.Wrap(err, errMsg)
 	}
 	defer rows.Close()
 	if rows.Next() {
 		err = rows.Scan(&deviceID)
 		if err != nil {
-			return device.Device{}, errors.Wrap(err, errMsg)
+			return device.Device{}, gerror.Wrap(err, errMsg)
 		}
 		created.ID = deviceID
 	}

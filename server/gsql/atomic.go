@@ -1,8 +1,8 @@
 package gsql
 
 import (
+	"github.com/jecepeda/greenhouse/server/gerror"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 type Transaction struct {
@@ -18,7 +18,7 @@ func (t *Transaction) End() error {
 		return nil
 	}
 	if err := t.transaction.Commit(); err != nil {
-		return errors.Wrap(err, "could not end transaction")
+		return gerror.Wrap(err, "could not end transaction")
 	}
 	return nil
 }
@@ -28,7 +28,7 @@ func (t *Transaction) Fail() error {
 		return nil
 	}
 	if err := t.transaction.Rollback(); err != nil {
-		return errors.Wrap(err, "could not end transaction")
+		return gerror.Wrap(err, "could not end transaction")
 	}
 	return nil
 }

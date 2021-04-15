@@ -5,8 +5,8 @@ import (
 
 	"github.com/jecepeda/greenhouse/server/crypt"
 	"github.com/jecepeda/greenhouse/server/domain/device"
+	"github.com/jecepeda/greenhouse/server/gerror"
 	"github.com/jecepeda/greenhouse/server/gsql"
-	"github.com/pkg/errors"
 )
 
 type Service struct {
@@ -30,12 +30,12 @@ func (s *Service) SaveDevice(ctx context.Context, name, password string) (device
 
 	hashedPassword, err := s.encrypter.EncryptPassword(password)
 	if err != nil {
-		return device.Device{}, errors.Wrap(err, errMsg)
+		return device.Device{}, gerror.Wrap(err, errMsg)
 	}
 
 	tx, err := s.txPoll.Start(ctx)
 	if err != nil {
-		return device.Device{}, errors.Wrap(err, errMsg)
+		return device.Device{}, gerror.Wrap(err, errMsg)
 	}
 	var success bool
 	defer func() {
@@ -44,10 +44,10 @@ func (s *Service) SaveDevice(ctx context.Context, name, password string) (device
 
 	created, err := s.drepo.StoreDevice(ctx, tx.GetTx(), name, hashedPassword)
 	if err != nil {
-		return device.Device{}, errors.Wrap(err, errMsg)
+		return device.Device{}, gerror.Wrap(err, errMsg)
 	}
 	if err = gsql.Commit(tx); err != nil {
-		return device.Device{}, errors.Wrap(err, errMsg)
+		return device.Device{}, gerror.Wrap(err, errMsg)
 	}
 	success = true
 

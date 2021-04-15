@@ -3,8 +3,8 @@ package gsql
 import (
 	"context"
 
+	"github.com/jecepeda/greenhouse/server/gerror"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 type Pool struct {
@@ -20,7 +20,7 @@ func NewPool(db *sqlx.DB) Pool {
 func (p Pool) Start(ctx context.Context) (Atomic, error) {
 	tx, err := p.DB.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not start transaction")
+		return nil, gerror.Wrap(err, "could not start transaction")
 	}
 	return &Transaction{transaction: tx}, nil
 }
