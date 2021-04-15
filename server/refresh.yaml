@@ -4,7 +4,7 @@ build_delay: 200ms
 build_flags: []
 build_path: /tmp/
 build_target_path: ''
-command_flags: ['run']
+command_flags: ['serve']
 enable_colors: true
 ignored_folders:
   - vendor

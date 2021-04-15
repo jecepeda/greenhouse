@@ -1,4 +1,4 @@
-version: '3.4'
+version: "3.4"
 services:
   app:
     build:
@@ -7,13 +7,15 @@ services:
     volumes:
       - .:/app
     ports:
-      - 2222:2222
+      - 4000:4000
     restart: on-failure
     depends_on:
       - database
     networks:
       - apidb
-
+    command: ["refresh", "run"]
+    tty: true
+    env_file: .env
 
   database:
     image: postgres:13.2
@@ -22,7 +24,7 @@ services:
       - POSTGRES_PASSWORD=ghpassword
       - POSTGRES_DB=greenhouse
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
       - database_postgres:/var/lib/postgresql/data
     networks:

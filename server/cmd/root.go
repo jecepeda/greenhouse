@@ -24,10 +24,13 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
 	viper.AutomaticEnv()
+
+	rootCmd.Flags().String("jwt_seed_key", "fake seed key", "The seed key needed to generate jwt keys")
+	rootCmd.Flags().String("port", "4000", "The port where the server will run")
+	rootCmd.Flags().String("db_host", "", "")
+	rootCmd.Flags().Int("db_port", 5432, "")
+	rootCmd.Flags().String("db_user", "", "")
+	rootCmd.Flags().String("db_password", "", "")
+	rootCmd.Flags().String("db_name", "", "")
 }

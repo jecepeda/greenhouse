@@ -8,7 +8,9 @@ import (
 
 type DependencyContainer interface {
 	SetTransactionPool(gsql.TransactionPool)
+	GetEncrypter() crypt.Encrypter
 	SetEncrypter(encrypter crypt.Encrypter)
 	GetDeviceService() device.Service
 	Init()
+	Serve(port string)
 }

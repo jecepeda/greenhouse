@@ -1,5 +1,11 @@
-production:
+dev:
     dialect: postgres
     datasource: host=localhost port=5432 user=ghuser password=ghpassword dbname=greenhouse sslmode=disable
-    dir: migrations/postgres
+    dir: migrations
+    table: migrations
+
+test:
+    dialect: postgres
+    datasource: host=localhost port=5431 user=gtest password=gtest dbname=gtestdb sslmode=disable
+    dir: migrations
     table: migrations

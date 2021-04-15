@@ -21,6 +21,7 @@ func NewService(encrypter crypt.Encrypter, db gsql.Common, txPool gsql.Transacti
 		encrypter: encrypter,
 		db:        db,
 		drepo:     drepo,
+		txPoll:    txPool,
 	}
 }
 
@@ -51,4 +52,8 @@ func (s *Service) SaveDevice(ctx context.Context, name, password string) (device
 	success = true
 
 	return created, nil
+}
+
+func (s *Service) FindByID(ctx context.Context, deviceID uint64) (device.Device, error) {
+	return s.drepo.FindByID(ctx, deviceID, s.db)
 }
