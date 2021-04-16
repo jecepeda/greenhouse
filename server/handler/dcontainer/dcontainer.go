@@ -98,7 +98,9 @@ func (dc *DepContainer) Serve(port string) {
 
 	an := negroni.New(negroni.HandlerFunc(auth.AuthMiddleware), negroni.Wrap(ar))
 	r.PathPrefix("/v1").Handler(an)
-	n := negroni.Classic()
+	n := negroni.New()
+	n.Use(negroni.NewLogger())
+	n.Use(negroni.NewRecovery())
 	n.UseHandler(r)
 
 	n.Run(":" + port)

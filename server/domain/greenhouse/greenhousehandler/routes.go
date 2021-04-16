@@ -9,7 +9,7 @@ import (
 func NewAuthRouter(dc handler.DependencyContainer) router.Router {
 	endpoints := []router.Endpoint{
 		{
-			Path:        "/v1/monitoring/data",
+			Path:        "/v1/device/{deviceID}/monitoring/data",
 			Method:      "POST",
 			HandlerFunc: auth.MatchDeviceID(SaveMonitoringData(dc)),
 		},

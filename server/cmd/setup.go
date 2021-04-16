@@ -31,7 +31,6 @@ func getDB() (*sqlx.DB, func() error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
-	fmt.Println(psqlInfo)
 	db, err := sqlx.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatalf("Could not connect mysql: %v", err)
