@@ -18,7 +18,7 @@ type DeviceHandlerTestSuite struct {
 	gtest.GTestSuite
 }
 
-func (suite *DeviceHandlerTestSuite) TestLogin() {
+func (suite *DeviceHandlerTestSuite) TestAuthentication() {
 	name := fake.CharactersN(20)
 	password := fake.CharactersN(20)
 	ctx := context.Background()
@@ -29,24 +29,37 @@ func (suite *DeviceHandlerTestSuite) TestLogin() {
 	d, err := suite.DC.GetDeviceService().SaveDevice(ctx, name, password)
 	suite.Require().NoError(err)
 
-	data := url.Values{}
-	data.Add("device", fmt.Sprint(d.ID))
-	data.Add("password", password)
+	suite.Run("test login", func() {
+		data := url.Values{}
+		data.Add("device", fmt.Sprint(d.ID))
+		data.Add("password", password)
 
-	tt := gtest.TestRequest{
-		Body:   strings.NewReader(data.Encode()),
-		Method: "POST",
-		IsForm: true,
-	}.Run(devicehandler.Login(suite.DC))
+		tt := gtest.TestRequest{
+			Body:   strings.NewReader(data.Encode()),
+			Method: "POST",
+			IsForm: true,
+		}.Run(devicehandler.Login(suite.DC))
 
-	suite.Require().Equal(http.StatusOK, tt.Code)
+		suite.Require().Equal(http.StatusOK, tt.Code)
 
-	response := make(map[string]string)
-	suite.Require().NoError(gtest.UnMarshalJSON(tt, &response))
-	_, ok := response["access_token"]
-	suite.True(ok)
-	_, ok = response["refresh_token"]
-	suite.True(ok)
+		response := make(map[string]string)
+		suite.Require().NoError(gtest.UnMarshalJSON(tt, &response))
+		_, ok := response["access_token"]
+		suite.True(ok)
+		_, ok = response["refresh_token"]
+		suite.True(ok)
+	})
+
+	suite.Run("test refresh", func() {
+		tt := gtest.TestRequest{
+			Body:      nil,
+			Method:    "POST",
+			DeviceID:  d.ID,
+			IsRefresh: true,
+		}.Run(devicehandler.Refresh(suite.DC))
+
+		suite.Require().Equal(http.StatusOK, tt.Code)
+	})
 }
 
 func TestDeviceHandlerTestSuite(t *testing.T) {

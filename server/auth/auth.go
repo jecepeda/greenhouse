@@ -22,8 +22,8 @@ var (
 )
 
 type JWTClaims struct {
-	DeviceID  uint64 `json:"device_id,omitempty"`
-	IsRefresh bool   `json:"is_refresh,omitempty"`
+	DeviceID  uint64 `json:"device_id"`
+	IsRefresh bool   `json:"is_refresh"`
 	jwt.StandardClaims
 }
 
@@ -62,7 +62,7 @@ func GetJWTClaims(r *http.Request) (*JWTClaims, error) {
 	}
 	claims := tkn.Claims.(jwt.MapClaims)
 	return &JWTClaims{
-		DeviceID:  claims["device_id"].(uint64),
+		DeviceID:  uint64(claims["device_id"].(float64)),
 		IsRefresh: claims["is_refresh"].(bool),
 	}, nil
 }
@@ -104,7 +104,7 @@ func AuthMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFu
 
 // WithAuth generates a new Request with JWT
 func WithAuth(req *http.Request, deviceID uint64, isRefresh bool) *http.Request {
-	token, _ := CreateJWT(deviceID, false, 60*time.Second)
+	token, _ := CreateJWT(deviceID, isRefresh, 60*time.Second)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	return req
 }

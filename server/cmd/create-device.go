@@ -29,7 +29,10 @@ var createDeviceCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(d)
+		fmt.Printf(
+			"Device:\n\tID: %d\n\tPassword%s\n\tName:%s\n",
+			d.ID, password, d.Name,
+		)
 	},
 }
 

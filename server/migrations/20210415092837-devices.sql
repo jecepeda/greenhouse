@@ -11,4 +11,4 @@ CREATE TABLE devices(
 
 -- +migrate Down
 
-DROP TABLE `devices`;
+DROP TABLE devices;

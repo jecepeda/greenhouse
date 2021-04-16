@@ -6,18 +6,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Router represents a set of routes from
+// the same domain, and all the paths that correspond to that domain
 type Router struct {
 	Handler http.HandlerFunc
 	Paths   []string
 }
 
-type Spec struct {
+// Endpoint represents the necessary data to build
+// router
+type Endpoint struct {
 	Path        string
 	Method      string
 	HandlerFunc http.HandlerFunc
 }
 
-func NewRouterFromEndpoints(endpoints []Spec) Router {
+// NewRouterFromEndpoints builds a router from a set of endpoints
+func NewRouterFromEndpoints(endpoints []Endpoint) Router {
 	r := mux.NewRouter()
 	paths := make([]string, len(endpoints))
 	for i, e := range endpoints {
@@ -30,6 +35,7 @@ func NewRouterFromEndpoints(endpoints []Spec) Router {
 	}
 }
 
+// AddToMux adds the router to mux router
 func AddToMux(m *mux.Router, r Router) {
 	for _, p := range r.Paths {
 		m.HandleFunc(p, r.Handler)

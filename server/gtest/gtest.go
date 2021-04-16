@@ -6,7 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/icrowley/fake"
 	"github.com/jecepeda/greenhouse/server/crypt"
+	"github.com/jecepeda/greenhouse/server/domain/device"
 	"github.com/jecepeda/greenhouse/server/gsql"
 	"github.com/jecepeda/greenhouse/server/handler"
 	"github.com/jecepeda/greenhouse/server/handler/dcontainer"
@@ -46,6 +48,16 @@ func (suite *GTestSuite) SetupTest() {
 
 func (suite *GTestSuite) TearDownTest() {
 	suite.Require().NoError(suite.Tx.Rollback())
+}
+
+func (suite *GTestSuite) CreateDevice() device.Device {
+	name := fake.CharactersN(20)
+	password := fake.CharactersN(20)
+	ctx := context.Background()
+
+	d, err := suite.DC.GetDeviceService().SaveDevice(ctx, name, password)
+	suite.Require().NoError(err)
+	return d
 }
 
 func SetupMockedAtomic(pool *gsql.MockTransactionPool, tx *sqlx.Tx) *gsql.AtomicMock {

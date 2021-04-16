@@ -1,6 +1,7 @@
 package gtest
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,12 +22,13 @@ type TestRequest struct {
 	QueryVars    map[string]string
 	ExtraHeaders map[string]string
 	IsForm       bool
+	IsRefresh    bool
 }
 
 func (tr TestRequest) Run(handler http.HandlerFunc) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(tr.Method, "", tr.Body)
 	if tr.DeviceID != 0 {
-		req = auth.WithAuth(req, tr.DeviceID, false)
+		req = auth.WithAuth(req, tr.DeviceID, tr.IsRefresh)
 	}
 	if tr.IsForm {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -67,4 +69,9 @@ func UnMarshalJSON(rr *httptest.ResponseRecorder, dest interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func MarshalJSON(v interface{}) io.Reader {
+	data, _ := json.Marshal(v)
+	return bytes.NewReader(data)
 }

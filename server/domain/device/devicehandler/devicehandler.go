@@ -13,11 +13,17 @@ import (
 	"github.com/jecepeda/greenhouse/server/handler/httputil"
 )
 
+const (
+	tokenDuration   = 60 * time.Second
+	refreshDuration = 24 * time.Hour
+)
+
 type loginResponse struct {
 	AccessToken  string `json:"access_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
+// Login logins a device
 func Login(dc handler.DependencyContainer) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var (
@@ -49,12 +55,12 @@ func Login(dc handler.DependencyContainer) http.HandlerFunc {
 			return
 		}
 
-		authToken, err := auth.CreateJWT(d.ID, false, 1*time.Minute)
+		authToken, err := auth.CreateJWT(d.ID, false, tokenDuration)
 		if err != nil {
 			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
 			return
 		}
-		refreshToken, err := auth.CreateJWT(d.ID, true, 24*time.Hour)
+		refreshToken, err := auth.CreateJWT(d.ID, true, refreshDuration)
 		if err != nil {
 			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
 			return
@@ -64,5 +70,35 @@ func Login(dc handler.DependencyContainer) http.HandlerFunc {
 			RefreshToken: refreshToken,
 		}
 		httputil.WriteJSON(rw, response)
+	}
+}
+
+type RefreshResponse struct {
+	AccessToken string `json:"access_token,omitempty"`
+}
+
+func Refresh(dc handler.DependencyContainer) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		var errMsg = "refresh"
+
+		claims, err := auth.GetJWTClaims(r)
+		_, cancel := context.WithTimeout(r.Context(), handler.DefaultDuration)
+
+		defer cancel()
+		if err != nil {
+			http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+		if !claims.IsRefresh {
+			http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		accessToken, err := auth.CreateJWT(claims.DeviceID, false, tokenDuration)
+		if err != nil {
+			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
+		}
+
+		httputil.WriteJSON(rw, RefreshResponse{AccessToken: accessToken})
 	}
 }
