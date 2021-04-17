@@ -37,7 +37,7 @@ func CreateJWT(deviceID uint64, refresh bool, duration time.Duration) (string, e
 		deviceID,
 		refresh,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(duration).Unix(),
+			ExpiresAt: time.Now().Add(duration).UTC().Unix(),
 		},
 	})
 
@@ -64,7 +64,19 @@ func GetJWTClaims(r *http.Request) (*JWTClaims, error) {
 	return &JWTClaims{
 		DeviceID:  uint64(claims["device_id"].(float64)),
 		IsRefresh: claims["is_refresh"].(bool),
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: int64(claims["exp"].(float64)),
+		},
 	}, nil
+}
+
+func GetJWTString(r *http.Request) (string, error) {
+	rawAuth := r.Header.Get("Authorization")
+	if rawAuth == "" {
+		return "", ErrNoAuthFound
+	}
+	rawAuth = strings.ReplaceAll(rawAuth, "Bearer ", "")
+	return rawAuth, nil
 }
 
 func MatchDeviceID(next http.HandlerFunc) http.HandlerFunc {
@@ -96,8 +108,10 @@ func AuthMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFu
 		http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}
-	if claims.Valid() != nil {
+	if claims.Valid() != nil || !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+		fmt.Println("claims are not valid", claims.Valid(), claims.VerifyExpiresAt(time.Now().Unix(), true))
 		http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
 	}
 	next(rw, r)
 }

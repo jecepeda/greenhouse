@@ -2,8 +2,8 @@ package devicehandler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/jecepeda/greenhouse/server/auth"
@@ -14,42 +14,43 @@ import (
 )
 
 const (
-	tokenDuration   = 60 * time.Second
-	refreshDuration = 24 * time.Hour
+	tokenDuration   = 60 * time.Second    // 60s (1 min)
+	refreshDuration = 30 * 24 * time.Hour // 30 days 24h 3600s (1 hour)
 )
 
+type loginRequest struct {
+	Device   uint64 `json:"device"`
+	Password string `json:"password"`
+}
+
 type loginResponse struct {
-	AccessToken  string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // Login logins a device
 func Login(dc handler.DependencyContainer) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var (
-			errMsg = "login"
+			errMsg       = "login"
+			loginRequest loginRequest
 		)
 		ctx, cancel := context.WithTimeout(r.Context(), handler.DefaultDuration)
 		defer cancel()
-		r.ParseForm()
 
-		strDevice := r.Form.Get("device")
-		password := r.Form.Get("password")
-
-		deviceID, err := strconv.ParseUint(strDevice, 10, 64)
-		if err != nil {
+		if err := httputil.ReadJSON(r, &loginRequest); err != nil {
 			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusBadRequest)
 			return
 		}
 
-		d, err := dc.GetDeviceService().FindByID(ctx, deviceID)
+		d, err := dc.GetDeviceService().FindByID(ctx, loginRequest.Device)
 		if err != nil {
 			msg, code := device.ErrToHTTP(err)
 			http.Error(rw, msg, code)
 			return
 		}
 
-		err = dc.GetEncrypter().CheckPassword(d.Password, password)
+		err = dc.GetEncrypter().CheckPassword(d.Password, loginRequest.Password)
 		if err != nil {
 			http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
@@ -65,6 +66,8 @@ func Login(dc handler.DependencyContainer) http.HandlerFunc {
 			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
 			return
 		}
+		fmt.Println(authToken)
+		fmt.Println(refreshToken)
 		response := loginResponse{
 			AccessToken:  authToken,
 			RefreshToken: refreshToken,
@@ -74,17 +77,17 @@ func Login(dc handler.DependencyContainer) http.HandlerFunc {
 }
 
 type RefreshResponse struct {
-	AccessToken string `json:"access_token,omitempty"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func Refresh(dc handler.DependencyContainer) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var errMsg = "refresh"
+		_, cancel := context.WithTimeout(r.Context(), handler.DefaultDuration)
+		defer cancel()
 
 		claims, err := auth.GetJWTClaims(r)
-		_, cancel := context.WithTimeout(r.Context(), handler.DefaultDuration)
-
-		defer cancel()
 		if err != nil {
 			http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
@@ -93,12 +96,35 @@ func Refresh(dc handler.DependencyContainer) http.HandlerFunc {
 			http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+		strClaims, err := auth.GetJWTString(r)
+		fmt.Println("claim string", strClaims)
+
+		fmt.Println("Expires at", claims.VerifyExpiresAt(time.Now().Unix(), true))
 
 		accessToken, err := auth.CreateJWT(claims.DeviceID, false, tokenDuration)
 		if err != nil {
 			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
+			return
 		}
 
-		httputil.WriteJSON(rw, RefreshResponse{AccessToken: accessToken})
+		refreshToken, err := auth.GetJWTString(r)
+		if err != nil {
+			http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+			// generate other token
+			refreshToken, err = auth.CreateJWT(claims.DeviceID, true, refreshDuration)
+			if err != nil {
+				http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		httputil.WriteJSON(rw, RefreshResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		})
 	}
 }

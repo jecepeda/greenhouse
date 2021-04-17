@@ -2,10 +2,7 @@ package devicehandler_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/icrowley/fake"
@@ -30,12 +27,13 @@ func (suite *DeviceHandlerTestSuite) TestAuthentication() {
 	suite.Require().NoError(err)
 
 	suite.Run("test login", func() {
-		data := url.Values{}
-		data.Add("device", fmt.Sprint(d.ID))
-		data.Add("password", password)
+		data := map[string]interface{}{
+			"device":   d.ID,
+			"password": password,
+		}
 
 		tt := gtest.TestRequest{
-			Body:   strings.NewReader(data.Encode()),
+			Body:   gtest.MarshalJSON(data),
 			Method: "POST",
 			IsForm: true,
 		}.Run(devicehandler.Login(suite.DC))
