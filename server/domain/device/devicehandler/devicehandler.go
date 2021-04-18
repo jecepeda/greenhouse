@@ -81,6 +81,8 @@ type RefreshResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// Refresh refresh tokens for the given device, including the access token
+// if its expiry date is out of date
 func Refresh(dc handler.DependencyContainer) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var errMsg = "refresh"
@@ -96,10 +98,6 @@ func Refresh(dc handler.DependencyContainer) http.HandlerFunc {
 			http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		strClaims, err := auth.GetJWTString(r)
-		fmt.Println("claim string", strClaims)
-
-		fmt.Println("Expires at", claims.VerifyExpiresAt(time.Now().Unix(), true))
 
 		accessToken, err := auth.CreateJWT(claims.DeviceID, false, tokenDuration)
 		if err != nil {

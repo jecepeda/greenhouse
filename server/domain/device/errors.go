@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// ErrNotFound is thrown when a device is not found
 	ErrNotFound = errors.New("device not found")
 )
 

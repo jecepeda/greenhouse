@@ -25,6 +25,7 @@ type TestRequest struct {
 	IsRefresh    bool
 }
 
+// Run runs a handler function given TestRequest parameters
 func (tr TestRequest) Run(handler http.HandlerFunc) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(tr.Method, "", tr.Body)
 	if tr.DeviceID != 0 {

@@ -1,3 +1,5 @@
+// Package handler contains the necessary tools
+// to run the server
 package handler
 
 import (
@@ -7,6 +9,8 @@ import (
 	"github.com/jecepeda/greenhouse/server/gsql"
 )
 
+// DependencyContainer is the main interface
+// which is used by handlers in order to access all the services
 type DependencyContainer interface {
 	SetTransactionPool(gsql.TransactionPool)
 	GetEncrypter() crypt.Encrypter

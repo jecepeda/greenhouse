@@ -1,3 +1,5 @@
+// Package gtest contains the utilities
+// to test inside the server package
 package gtest
 
 import (
@@ -18,6 +20,9 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+// GTestSuite is the main structure used in our tests
+// to gather all setup/teardown/utility logic into one place
+// so we don't need to write the same code everywhere
 type GTestSuite struct {
 	suite.Suite
 	DC   handler.DependencyContainer
@@ -60,6 +65,8 @@ func (suite *GTestSuite) CreateDevice() device.Device {
 	return d
 }
 
+// SetupMockedAtomic setups the transaction pool so when
+// a service function inits a transaction, we return a mock atomic
 func SetupMockedAtomic(pool *gsql.MockTransactionPool, tx *sqlx.Tx) *gsql.AtomicMock {
 	at := gsql.NewAtomicMock(tx)
 	at.On("End").Return()
@@ -68,6 +75,8 @@ func SetupMockedAtomic(pool *gsql.MockTransactionPool, tx *sqlx.Tx) *gsql.Atomic
 	return at
 }
 
+// VerifySucceeded checks that the atomic function End has been called
+// and the Fail didn't
 func VerifySucceeded(t *testing.T, at *gsql.AtomicMock) {
 	t.Helper()
 	at.AssertCalled(t, "End")

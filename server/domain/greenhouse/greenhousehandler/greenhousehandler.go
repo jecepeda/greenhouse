@@ -17,6 +17,7 @@ type SaveMonitoringDataRequest struct {
 	HumidifierEnabled bool    `json:"humidifier_enabled"`
 }
 
+// SaveMonitoringData saves monitoring data
 func SaveMonitoringData(dc handler.DependencyContainer) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var (
