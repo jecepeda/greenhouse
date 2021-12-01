@@ -7,7 +7,7 @@
 void setupWifi();
 void loginDevice();
 void refreshTokens();
-void sendTelemetry();
+void sendTelemetry(float temperature, float humidity, bool heaterEnabled, bool humidifierEnabled);
 
 // auth values
 String accessToken = "";
@@ -23,19 +23,19 @@ void setup()
 void loop()
 {
   delay(1000);
-  // refreshTokens();
-  sendTelemetry();
+
+  sendTelemetry(10, 80, true, false);
 }
 
-void sendTelemetry()
+void sendTelemetry(float temperature, float humidity, bool heaterEnabled, bool humidifierEnabled)
 {
   refreshTokens();
   Serial.println("setting up data");
   DynamicJsonDocument doc(1024);
-  doc["temperature"] = 12.345;
-  doc["humidity"] = 13.45;
-  doc["heater_enabled"] = true;
-  doc["humidifier_enabled"] = true;
+  doc["temperature"] = temperature;
+  doc["humidity"] = humidifierEnabled;
+  doc["heater_enabled"] = heaterEnabled;
+  doc["humidifier_enabled"] = humidifierEnabled;
   Serial.println("finish setting up data");
   if (WiFi.status() == WL_CONNECTED)
   {
@@ -76,6 +76,10 @@ void refreshTokens()
       accessToken = response["access_token"].as<String>();
       refreshToken = response["refresh_token"].as<String>();
       Serial.println("Refresh token has been obtained");
+    }
+    else
+    {
+      loginDevice();
     }
     http.end();
   }

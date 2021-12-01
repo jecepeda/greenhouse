@@ -2,7 +2,6 @@ package devicehandler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -66,8 +65,6 @@ func Login(dc handler.DependencyContainer) http.HandlerFunc {
 			http.Error(rw, gerror.Wrap(err, errMsg).Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(authToken)
-		fmt.Println(refreshToken)
 		response := loginResponse{
 			AccessToken:  authToken,
 			RefreshToken: refreshToken,
